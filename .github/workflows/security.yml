@@ -49,12 +49,15 @@ jobs:
           go-version: '1.26.3'
           cache: true
 
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
       - name: Run Gosec
-        uses: securego/gosec@master
-        with:
-          args: ./...
+        run: gosec ./...
 
       # Uncomment when repo is public to surface findings in the Security tab:
+      # - name: Run Gosec (SARIF output)
+      #   run: gosec -fmt sarif -out gosec-results.sarif ./...
       # - name: Upload Gosec SARIF results
       #   uses: github/codeql-action/upload-sarif@v4
       #   if: always()
@@ -79,7 +82,7 @@ jobs:
   #     - name: Set up Go
   #       uses: actions/setup-go@v5
   #       with:
-  #         go-version-file: go.mod
+  #         go-version: '1.26.3'
   #         cache: true
   #
   #     - name: Initialize CodeQL
