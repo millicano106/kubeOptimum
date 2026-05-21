@@ -32,10 +32,13 @@ jobs:
   gosec:
     name: Gosec Static Analysis
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
+    # NOTE: SARIF upload requires GitHub Advanced Security (free for public repos).
+    # When this repo is made public, add back:
+    #   permissions:
+    #     security-events: write
+    #     actions: read
+    #     contents: read
+    # and restore the upload step below.
 
     steps:
       - uses: actions/checkout@v4
@@ -49,42 +52,46 @@ jobs:
       - name: Run Gosec
         uses: securego/gosec@master
         with:
-          args: "-fmt sarif -out gosec-results.sarif ./..."
+          args: ./...
 
-      - name: Upload Gosec SARIF results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: gosec-results.sarif
-          category: gosec
+      # Uncomment when repo is public to surface findings in the Security tab:
+      # - name: Upload Gosec SARIF results
+      #   uses: github/codeql-action/upload-sarif@v4
+      #   if: always()
+      #   with:
+      #     sarif_file: gosec-results.sarif
+      #     category: gosec
 
-  codeql:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: go
-          queries: security-extended
-
-      - name: Build for CodeQL
-        run: go build ./...
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: codeql-go
+  # CodeQL requires GitHub Advanced Security (free for public repos).
+  # Uncomment this entire job when the repo is made public.
+  #
+  # codeql:
+  #   name: CodeQL Analysis
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     security-events: write
+  #     actions: read
+  #     contents: read
+  #
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: go.mod
+  #         cache: true
+  #
+  #     - name: Initialize CodeQL
+  #       uses: github/codeql-action/init@v4
+  #       with:
+  #         languages: go
+  #         queries: security-extended
+  #
+  #     - name: Build for CodeQL
+  #       run: go build ./...
+  #
+  #     - name: Perform CodeQL Analysis
+  #       uses: github/codeql-action/analyze@v4
+  #       with:
+  #         category: codeql-go
