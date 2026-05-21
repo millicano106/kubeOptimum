@@ -1,0 +1,14 @@
+# Compiled binary
+kubeOptimum
+
+# Test output
+*.out
+*.test
+
+# Report files
+kubeOptimum-report-*.json
+kubeOptimum-report-*.txt
+kubeOptimum-report-*.yaml
+
+# OS
+.DS_Store
