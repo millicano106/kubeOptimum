@@ -59,8 +59,6 @@ func (IdleWorkloads) Run(ctx context.Context, ac *advisor.AnalysisContext) ([]ad
 		replicas := deployReplicas[deployKey]
 
 		var ns, name string
-		fmt.Sscanf(deployKey, "%s", &ns) // not ideal but see below
-		// Split manually to avoid importing strings.
 		for i, ch := range deployKey {
 			if ch == '/' {
 				ns = deployKey[:i]

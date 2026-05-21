@@ -19,7 +19,7 @@ type ngUsage struct {
 	memRequestBytes int64
 	allocCPUMilli   int64
 	allocMemBytes   int64
-	nodeCount       int
+	nodeCount       int32
 	instanceType    string
 }
 
@@ -146,7 +146,7 @@ func ngSuggestDesired(usage *ngUsage) int32 {
 	const targetUtil = 0.80
 	perNodeCPU := float64(usage.allocCPUMilli) / float64(usage.nodeCount)
 	if perNodeCPU == 0 {
-		return int32(usage.nodeCount)
+		return usage.nodeCount
 	}
 	needed := math.Ceil(float64(usage.cpuRequestMilli) / (perNodeCPU * targetUtil))
 	if needed < 1 {
@@ -160,7 +160,7 @@ func ngSavingEstimate(usage *ngUsage, ac *advisor.AnalysisContext) float64 {
 	if !ok || usage.nodeCount == 0 {
 		return 0
 	}
-	removedNodes := int32(usage.nodeCount) - ngSuggestDesired(usage)
+	removedNodes := usage.nodeCount - ngSuggestDesired(usage)
 	if removedNodes <= 0 {
 		return 0
 	}

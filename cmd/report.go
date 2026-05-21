@@ -89,7 +89,7 @@ func runReport(cmd *cobra.Command, args []string) error {
 		outPath = filepath.Join(outPath, fmt.Sprintf("kubeOptimum-report-%s.%s", date, ext))
 	}
 
-	f, err := os.Create(outPath)
+	f, err := os.Create(filepath.Clean(outPath)) // #nosec G304 -- output path is intentionally user-supplied
 	if err != nil {
 		return fmt.Errorf("create report file: %w", err)
 	}
