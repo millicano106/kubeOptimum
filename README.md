@@ -265,8 +265,14 @@ go test ./internal/advisor/checks/... -v
 - [ ] AKS support (Azure Pricing API)
 - [ ] HPA recommendation check (workloads that could autoscale instead of being over-provisioned)
 - [ ] PodDisruptionBudget audit
-- [ ] GitHub Actions CI
+- [x] GitHub Actions CI
 - [ ] Helm chart for in-cluster deployment with scheduled reports
+
+---
+
+## Built on
+
+Vibes and AI tokens. No AWS bill was harmed in the making of this tool — but yours might be smaller after running it.
 
 ---
 
