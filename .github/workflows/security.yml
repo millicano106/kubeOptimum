@@ -15,19 +15,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.26.3'
           cache: true
 
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
       - name: Run govulncheck
-        uses: golang/govulncheck-action@v1
-        with:
-          go-version-input: ""   # uses go-version-file
-          go-package: ./...
+        run: govulncheck ./...
 
   gosec:
     name: Gosec Static Analysis
@@ -41,10 +41,10 @@ jobs:
     # and restore the upload step below.
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.26.3'
           cache: true
@@ -77,10 +77,10 @@ jobs:
   #     contents: read
   #
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #
   #     - name: Set up Go
-  #       uses: actions/setup-go@v5
+  #       uses: actions/setup-go@v6
   #       with:
   #         go-version: '1.26.3'
   #         cache: true
