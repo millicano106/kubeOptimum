@@ -40,7 +40,9 @@ func printDataSummary(w io.Writer, ac *advisor.AnalysisContext) {
 
 	if len(ac.ContainerMetrics) == 0 {
 		fmt.Fprintln(w, "  [!] no Prometheus container metrics — right-sizing and idle workload checks will produce no results")
-		fmt.Fprintln(w, "      check Prometheus URL in config and that container_cpu_usage_seconds_total is being scraped")
+		for _, d := range ac.Diagnostics {
+			fmt.Fprintf(w, "      %s\n", d)
+		}
 	} else {
 		// Show how many pods have both K8s and Prometheus data.
 		matched := countMatchedPods(ac)

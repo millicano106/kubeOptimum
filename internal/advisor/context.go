@@ -28,6 +28,10 @@ type AnalysisContext struct {
 	// Configuration passed through from the CLI
 	LookbackWindow time.Duration
 	Thresholds     Thresholds
+
+	// Diagnostics holds human-readable messages produced during data collection
+	// (e.g. "metric exists but query returned 0 — try a shorter --window").
+	Diagnostics []string
 }
 
 // Thresholds mirrors config.Thresholds but lives in the advisor package so

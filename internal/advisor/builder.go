@@ -130,6 +130,12 @@ func BuildContext(ctx context.Context, cfg *config.Config, k8s kubernetes.Interf
 
 	slog.Debug("all data sources fetched", "elapsed", time.Since(start))
 
+	if len(ac.ContainerMetrics) == 0 {
+		msg := promclient.DiagnoseContainerMetrics(ctx, promAPI, cfg.Analysis.Namespace)
+		ac.Diagnostics = append(ac.Diagnostics, msg)
+		slog.Debug("container metric diagnostic", "result", msg)
+	}
+
 	// Backfill instance types found on nodes (may differ from nodegroup listing).
 	if ac.InstanceTypes == nil {
 		ac.InstanceTypes = make(map[string]cloudprovider.InstanceTypeDetail)
