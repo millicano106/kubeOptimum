@@ -1,0 +1,14 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:2.0.0": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+    "ghcr.io/devcontainers/features/go:1": { "version": "1.26" },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+    "ghcr.io/devcontainers/features/aws-cli:1": {}
+  },
+  "mounts": [
+    "source=/home/ashle/.claude,target=/home/vscode/.claude,type=bind"
+  ],
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+}
