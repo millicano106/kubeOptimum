@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -27,10 +28,12 @@ func NewEKSClient(cfg awssdk.Config, clusterName string) *EKSClient {
 
 // FetchNodegroups lists all nodegroups in the cluster and returns summaries.
 func (c *EKSClient) FetchNodegroups(ctx context.Context) ([]cloudprovider.NodegroupSummary, error) {
+	slog.Debug("fetching EKS nodegroups", "cluster", c.clusterName)
 	names, err := c.listNodegroupNames(ctx)
 	if err != nil {
 		return nil, err
 	}
+	slog.Debug("listed nodegroup names", "count", len(names))
 
 	summaries := make([]cloudprovider.NodegroupSummary, 0, len(names))
 	for _, name := range names {
@@ -38,8 +41,10 @@ func (c *EKSClient) FetchNodegroups(ctx context.Context) ([]cloudprovider.Nodegr
 		if err != nil {
 			return nil, err
 		}
+		slog.Debug("described nodegroup", "name", name, "instance_type", ng.InstanceType, "desired", ng.DesiredSize)
 		summaries = append(summaries, ng)
 	}
+	slog.Debug("fetched EKS nodegroups", "count", len(summaries))
 	return summaries, nil
 }
 

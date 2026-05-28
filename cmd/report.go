@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -34,6 +35,11 @@ func runReport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	slog.Debug("config loaded",
+		"prometheus_url", cfg.Prometheus.URL,
+		"namespace", cfg.Analysis.Namespace,
+		"window", cfg.Analysis.LookbackWindow,
+	)
 
 	ctx := cmd.Context()
 
@@ -41,11 +47,13 @@ func runReport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("kubernetes client: %w", err)
 	}
+	slog.Debug("kubernetes client ready")
 
 	promAPI, err := promclient.NewAPI(cfg.Prometheus.URL, cfg.Prometheus.Token, cfg.Prometheus.Username, cfg.Prometheus.Password)
 	if err != nil {
 		return fmt.Errorf("prometheus client: %w", err)
 	}
+	slog.Debug("prometheus client ready", "url", cfg.Prometheus.URL)
 
 	dryRun, _ := rootCmd.PersistentFlags().GetBool("dry-run")
 	awsCfg, err := awsprovider.NewConfig(ctx, cfg.AWS.Region, cfg.AWS.Profile, cfg.AWS.RoleARN)
@@ -56,6 +64,7 @@ func runReport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("aws provider: %w", err)
 	}
+	slog.Debug("aws provider ready", "cluster", cfg.AWS.ClusterName, "dry_run", dryRun)
 
 	ac, err := advisor.BuildContext(ctx, cfg, k8s, promAPI, cloud)
 	if err != nil {
@@ -72,6 +81,7 @@ func runReport(cmd *cobra.Command, args []string) error {
 	}
 
 	recs := applyFilters(result.Recommendations, cmd)
+	slog.Debug("recommendations after filters", "count", len(recs))
 
 	// Resolve output path.
 	outPath, _ := cmd.Flags().GetString("output-file")
@@ -89,6 +99,7 @@ func runReport(cmd *cobra.Command, args []string) error {
 		date := time.Now().Format("2006-01-02")
 		outPath = filepath.Join(outPath, fmt.Sprintf("kubeOptimum-report-%s.%s", date, ext))
 	}
+	slog.Debug("writing report", "path", outPath, "format", format)
 
 	f, err := os.Create(filepath.Clean(outPath)) // #nosec G304 -- output path is intentionally user-supplied
 	if err != nil {

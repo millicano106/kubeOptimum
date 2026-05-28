@@ -3,6 +3,8 @@ package advisor
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/kubernetes"
@@ -24,6 +26,11 @@ func BuildContext(ctx context.Context, cfg *config.Config, k8s kubernetes.Interf
 		return nil, fmt.Errorf("parse lookback window: %w", err)
 	}
 
+	slog.Debug("building analysis context",
+		"window", window,
+		"namespace", cfg.Analysis.Namespace,
+	)
+
 	ac := &AnalysisContext{
 		LookbackWindow: window,
 		Thresholds: Thresholds{
@@ -33,10 +40,12 @@ func BuildContext(ctx context.Context, cfg *config.Config, k8s kubernetes.Interf
 		},
 	}
 
+	start := time.Now()
 	g, gctx := errgroup.WithContext(ctx)
 
 	// K8s fetch.
 	g.Go(func() error {
+		slog.Debug("starting k8s fetch")
 		var err error
 		ac.Nodes, err = k8sclient.FetchNodes(gctx, k8s)
 		if err != nil {
@@ -50,11 +59,17 @@ func BuildContext(ctx context.Context, cfg *config.Config, k8s kubernetes.Interf
 		if err != nil {
 			return fmt.Errorf("fetch pods: %w", err)
 		}
+		slog.Debug("k8s fetch complete",
+			"nodes", len(ac.Nodes),
+			"deployments", len(ac.Deployments),
+			"pods", len(ac.Pods),
+		)
 		return nil
 	})
 
 	// Prometheus fetch.
 	g.Go(func() error {
+		slog.Debug("starting prometheus fetch")
 		fetcher := &promclient.Fetcher{API: promAPI}
 		containerMetrics, nodeMetrics, err := fetcher.FetchAll(gctx, cfg.Analysis.Namespace, window)
 		if err != nil {
@@ -62,11 +77,16 @@ func BuildContext(ctx context.Context, cfg *config.Config, k8s kubernetes.Interf
 		}
 		ac.ContainerMetrics = containerMetrics
 		ac.NodeMetrics = nodeMetrics
+		slog.Debug("prometheus fetch complete",
+			"container_metrics", len(containerMetrics),
+			"node_metrics", len(nodeMetrics),
+		)
 		return nil
 	})
 
 	// Cloud provider fetch.
 	g.Go(func() error {
+		slog.Debug("starting cloud provider fetch")
 		nodegroups, err := cloud.FetchNodegroups(gctx)
 		if err != nil {
 			return fmt.Errorf("fetch nodegroups: %w", err)
@@ -96,12 +116,19 @@ func BuildContext(ctx context.Context, cfg *config.Config, k8s kubernetes.Interf
 			return fmt.Errorf("fetch pricing: %w", err)
 		}
 		ac.Pricing = pricing
+		slog.Debug("cloud provider fetch complete",
+			"nodegroups", len(nodegroups),
+			"instance_types", len(instanceTypes),
+			"pricing_entries", len(pricing),
+		)
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
+
+	slog.Debug("all data sources fetched", "elapsed", time.Since(start))
 
 	// Backfill instance types found on nodes (may differ from nodegroup listing).
 	if ac.InstanceTypes == nil {

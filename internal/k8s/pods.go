@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,6 +26,7 @@ type PodSummary struct {
 
 // FetchPods lists all running pods in the given namespace (empty = all).
 func FetchPods(ctx context.Context, client kubernetes.Interface, namespace string) ([]PodSummary, error) {
+	slog.Debug("fetching pods", "namespace", namespace)
 	list, err := client.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		FieldSelector: "status.phase=Running",
 	})
@@ -42,6 +44,7 @@ func FetchPods(ctx context.Context, client kubernetes.Interface, namespace strin
 	for _, p := range list.Items {
 		summaries = append(summaries, podToSummary(p, rsOwner))
 	}
+	slog.Debug("fetched pods", "count", len(summaries), "replicasets_mapped", len(rsOwner))
 	return summaries, nil
 }
 

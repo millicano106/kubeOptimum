@@ -40,6 +40,13 @@ func init() {
 	rootCmd.PersistentFlags().String("output", "table", "output format: table, json, yaml")
 	rootCmd.PersistentFlags().String("window", "7d", "Prometheus lookback window (e.g. 24h, 7d)")
 	rootCmd.PersistentFlags().Bool("dry-run", false, "skip AWS Pricing API calls")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "enable verbose debug logging to stderr")
+
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
+		verbose, _ := cmd.Flags().GetBool("verbose")
+		initLogger(verbose)
+		return nil
+	}
 
 	_ = v.BindPFlag("kubernetes.kubeconfig", rootCmd.PersistentFlags().Lookup("kubeconfig"))
 	_ = v.BindPFlag("kubernetes.context", rootCmd.PersistentFlags().Lookup("context"))

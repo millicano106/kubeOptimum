@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,6 +26,7 @@ type NodeSummary struct {
 
 // FetchNodes lists all nodes and returns summarised information.
 func FetchNodes(ctx context.Context, client kubernetes.Interface) ([]NodeSummary, error) {
+	slog.Debug("fetching nodes")
 	list, err := client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("list nodes: %w", err)
@@ -34,6 +36,7 @@ func FetchNodes(ctx context.Context, client kubernetes.Interface) ([]NodeSummary
 	for _, n := range list.Items {
 		summaries = append(summaries, nodeToSummary(n))
 	}
+	slog.Debug("fetched nodes", "count", len(summaries))
 	return summaries, nil
 }
 

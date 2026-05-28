@@ -3,6 +3,7 @@ package advisor
 import (
 	"context"
 	"fmt"
+	"log/slog"
 )
 
 // Check is implemented by each individual advisor check.
@@ -34,11 +35,14 @@ type RunResult struct {
 func (a *Advisor) Run(ctx context.Context, ac *AnalysisContext) RunResult {
 	var result RunResult
 	for _, check := range a.checks {
+		slog.Debug("running check", "check", check.Name())
 		recs, err := check.Run(ctx, ac)
 		if err != nil {
 			result.Errors = append(result.Errors, fmt.Errorf("check %s: %w", check.Name(), err))
+			slog.Debug("check failed", "check", check.Name(), "err", err)
 			continue
 		}
+		slog.Debug("check complete", "check", check.Name(), "recommendations", len(recs))
 		result.Recommendations = append(result.Recommendations, recs...)
 	}
 	return result

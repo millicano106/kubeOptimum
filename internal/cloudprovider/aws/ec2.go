@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -26,6 +27,7 @@ func (c *EC2Client) FetchInstanceTypes(ctx context.Context, types []string) (map
 	if len(types) == 0 {
 		return nil, nil
 	}
+	slog.Debug("fetching EC2 instance types", "count", len(types), "types", types)
 
 	itypes := make([]ec2types.InstanceType, len(types))
 	for i, t := range types {
@@ -51,6 +53,7 @@ func (c *EC2Client) FetchInstanceTypes(ctx context.Context, types []string) (map
 		}
 		result[name] = detail
 	}
+	slog.Debug("fetched EC2 instance types", "count", len(result))
 	return result, nil
 }
 

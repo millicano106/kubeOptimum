@@ -3,6 +3,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	prometheusv1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -33,6 +34,7 @@ func (f *Fetcher) FetchAll(ctx context.Context, namespace string, window time.Du
 	nodes map[NodeKey]NodeMetrics,
 	err error,
 ) {
+	slog.Debug("fetching prometheus metrics", "namespace", namespace, "window", window)
 	win := WindowStr(window)
 	ns := NSFilter(namespace)
 
@@ -75,6 +77,7 @@ func (f *Fetcher) FetchAll(ctx context.Context, namespace string, window time.Du
 			CPUThrottled: throttleData[k],
 		}
 	}
+	slog.Debug("container metrics fetched", "containers", len(containers))
 
 	nodeCPU, nodeCPUErr := QueryNodeFloat(ctx, f.API, fmt.Sprintf(QueryNodeCPUUtil, win))
 	if nodeCPUErr != nil {
@@ -98,6 +101,7 @@ func (f *Fetcher) FetchAll(ctx context.Context, namespace string, window time.Du
 			MemUtil: nodeMem[k],
 		}
 	}
+	slog.Debug("node metrics fetched", "nodes", len(nodes))
 
 	return containers, nodes, nil
 }

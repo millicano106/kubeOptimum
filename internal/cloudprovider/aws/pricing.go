@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
@@ -50,17 +51,20 @@ func (c *PricingClient) FetchOnDemandPrices(ctx context.Context, instanceTypes [
 	if len(instanceTypes) == 0 {
 		return nil, nil
 	}
+	slog.Debug("fetching on-demand pricing", "instance_types", instanceTypes)
 
 	result := make(map[string]float64, len(instanceTypes))
-
 	for _, it := range instanceTypes {
 		price, err := c.fetchPrice(ctx, it)
 		if err != nil {
 			// Non-fatal: some instance types may not have pricing data.
+			slog.Debug("pricing lookup failed", "instance_type", it, "err", err)
 			continue
 		}
+		slog.Debug("pricing fetched", "instance_type", it, "price_per_hr", price)
 		result[it] = price
 	}
+	slog.Debug("pricing fetch complete", "found", len(result), "requested", len(instanceTypes))
 	return result, nil
 }
 

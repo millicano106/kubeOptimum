@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +31,7 @@ type DeploymentSummary struct {
 
 // FetchDeployments lists all deployments in the given namespace (empty = all).
 func FetchDeployments(ctx context.Context, client kubernetes.Interface, namespace string) ([]DeploymentSummary, error) {
+	slog.Debug("fetching deployments", "namespace", namespace)
 	list, err := client.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("list deployments: %w", err)
@@ -39,6 +41,7 @@ func FetchDeployments(ctx context.Context, client kubernetes.Interface, namespac
 	for _, d := range list.Items {
 		summaries = append(summaries, deploymentToSummary(d))
 	}
+	slog.Debug("fetched deployments", "count", len(summaries))
 	return summaries, nil
 }
 

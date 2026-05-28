@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -32,6 +33,12 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	slog.Debug("config loaded",
+		"prometheus_url", cfg.Prometheus.URL,
+		"namespace", cfg.Analysis.Namespace,
+		"window", cfg.Analysis.LookbackWindow,
+		"region", cfg.AWS.Region,
+	)
 
 	ctx := cmd.Context()
 
@@ -40,12 +47,14 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("kubernetes client: %w", err)
 	}
+	slog.Debug("kubernetes client ready", "kubeconfig", cfg.Kubernetes.Kubeconfig, "context", cfg.Kubernetes.Context)
 
 	// Build Prometheus API client.
 	promAPI, err := promclient.NewAPI(cfg.Prometheus.URL, cfg.Prometheus.Token, cfg.Prometheus.Username, cfg.Prometheus.Password)
 	if err != nil {
 		return fmt.Errorf("prometheus client: %w", err)
 	}
+	slog.Debug("prometheus client ready", "url", cfg.Prometheus.URL)
 
 	// Build AWS cloud provider.
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
@@ -56,6 +65,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("aws config: %w", err)
 	}
+	slog.Debug("aws config loaded", "region", cfg.AWS.Region, "cluster", cfg.AWS.ClusterName, "dry_run", dryRun)
 	cloud, err := awsprovider.NewProvider(ctx, awsCfg, cfg.AWS.ClusterName, dryRun)
 	if err != nil {
 		return fmt.Errorf("aws provider: %w", err)

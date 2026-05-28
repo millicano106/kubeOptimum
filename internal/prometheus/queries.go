@@ -3,6 +3,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	prometheusv1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -47,6 +48,9 @@ type NodeKey struct {
 
 // QueryContainerFloat runs an instant query and returns a map of ContainerKey → float64.
 func QueryContainerFloat(ctx context.Context, api prometheusv1.API, query string) (map[ContainerKey]float64, error) {
+	start := time.Now()
+	slog.Debug("prometheus query", "query", query)
+
 	result, _, err := api.Query(ctx, query, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("prometheus query: %w", err)
@@ -66,11 +70,15 @@ func QueryContainerFloat(ctx context.Context, api prometheusv1.API, query string
 		}
 		out[key] = float64(sample.Value)
 	}
+	slog.Debug("prometheus query done", "samples", len(out), "elapsed", time.Since(start))
 	return out, nil
 }
 
 // QueryNodeFloat runs an instant query and returns a map of node name → float64.
 func QueryNodeFloat(ctx context.Context, api prometheusv1.API, query string) (map[NodeKey]float64, error) {
+	start := time.Now()
+	slog.Debug("prometheus node query", "query", query)
+
 	result, _, err := api.Query(ctx, query, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("prometheus query: %w", err)
@@ -86,6 +94,7 @@ func QueryNodeFloat(ctx context.Context, api prometheusv1.API, query string) (ma
 		key := NodeKey{Node: string(sample.Metric["node"])}
 		out[key] = float64(sample.Value)
 	}
+	slog.Debug("prometheus node query done", "samples", len(out), "elapsed", time.Since(start))
 	return out, nil
 }
 
