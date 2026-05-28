@@ -66,6 +66,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("build analysis context: %w", err)
 	}
+	printDataSummary(os.Stderr, ac)
 
 	// Run all advisor checks (minus any explicitly disabled ones).
 	disabled, _ := cmd.Flags().GetStringSlice("disable-check")
